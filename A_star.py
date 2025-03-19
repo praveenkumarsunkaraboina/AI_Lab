@@ -23,29 +23,29 @@ heuristics ={
 def a_star_search(graph,heuristics,start,goal):
     nodes_gen=0
     vis=set()
-    pq=[(0,start,[start])]
+    pq=[(0,start,[start],0)]
     nodes_gen=nodes_gen+1
     total_cost=float('inf')
     path=[]
     while pq:
-        curr_cost, curr_node, curr_path = heapq.heappop(pq)
+        curr_cost, curr_node, curr_path, total_path_cost = heapq.heappop(pq)
         if curr_node in vis:
             continue
         vis.add(curr_node)
 
         if curr_node == goal:
-            if total_cost>curr_cost:
-                total_cost=curr_cost
-                path=curr_path
-            continue
+            print("A* Search - Number of nodes expanded:", nodes_gen)
+            print("Total Path Cost:",total_path_cost)
+            return curr_path, nodes_gen
+
         
         for neighbor, weight in graph[curr_node]:
             if neighbor not in vis:
-                tentative_cost = curr_cost + weight
+                tentative_cost = total_path_cost + weight
                 heuristic = heuristics[neighbor]
                 f = tentative_cost + heuristic
                 nodes_gen=nodes_gen+1
-                heapq.heappush(pq, (f, neighbor, curr_path+[neighbor]))
+                heapq.heappush(pq, (f, neighbor, curr_path+[neighbor], tentative_cost))
     return path, nodes_gen
 
 def uniform_cost_search(graph,start,goal):
