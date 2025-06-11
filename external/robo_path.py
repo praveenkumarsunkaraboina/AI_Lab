@@ -1,7 +1,11 @@
 import heapq
 
 ROWS, COLS = 4,6
-START, GOAL = (2,1), (2,4)
+start_x=2
+start_y=1
+goal_x=2
+goal_y=4
+START, GOAL = (start_x,start_y), (goal_x,goal_y)
 
 # Obstacles represented as blocked edges
 OBSTACLES = {
@@ -29,30 +33,24 @@ def heuristic(curr,goal,dist_type):
     return abs(curr[0]-goal[0])+abs(curr[1]-goal[1]) if dist_type=="manhattan" else max(abs(curr[0]-goal[0]),abs(curr[1]-goal[1]))
 
 def a_star(start,goal,dist_type):
-    queue = [(0,start)]
-    parent={start:None}
-    g={start:0}
-
+    queue = [(heuristic(start,goal,dist_type),start,0,[start])]
+    vis=set()
     while queue:
-        cost, node = heapq.heappop(queue)
+        h_x,node,cost,curr_path = heapq.heappop(queue)
+        if node in vis:
+            continue
+        vis.add(node)
+        path = curr_path+[node]
         if node == goal:
-            path=[]
-            while node:
-                path.append(node)
-                node=parent[node]
-            return path[::-1],g[goal]
+            return path, cost
         for dr,dc in MOVES[dist_type]:
             nxt = (node[0]+dr,node[1]+dc)
             if not is_valid_move(node,nxt,dist_type):
                 continue
 
             step_cost = 1 if (dr,dc) in MOVES["manhattan"] else 2**0.5
-            total_cost = g[node]+step_cost
-            if nxt not in g or total_cost<g[nxt]:
-                g[nxt]=total_cost
-                parent[nxt]=node
-                heapq.heappush(queue, (total_cost+heuristic(nxt,goal,dist_type),nxt))
-
+            total_cost = cost+step_cost
+            heapq.heappush(queue, (total_cost+heuristic(nxt,goal,dist_type),nxt,total_cost,curr_path+[nxt]))
     return None, float('inf')
 
 
