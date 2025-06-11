@@ -35,6 +35,9 @@ def main():
                 print(f"({A},{B},{C},{D})")
     
     if not temp:
-        print("No matter ")
+        print("No matter how we assign truth values to variables no satifiable assignment is obtained....")
+
+if __name__ == "__main__":
+    main()
 
             
