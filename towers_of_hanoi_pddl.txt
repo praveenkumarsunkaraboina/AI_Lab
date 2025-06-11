@@ -1,0 +1,80 @@
+# Towers of Hanoi PDDL Domain
+
+```pddl
+(define (domain hanoi)
+  (:requirements :strips :typing)
+  
+  (:types disk peg)
+  
+  (:predicates
+    (on ?d - disk ?p - peg)          ; disk d is on peg p
+    (clear ?d - disk)                ; disk d has nothing on top
+    (smaller ?d1 ?d2 - disk)         ; d1 is smaller than d2
+    (top ?d - disk ?p - peg)         ; d is topmost disk on peg p
+  )
+  
+  (:action move
+    :parameters (?d - disk ?from ?to - peg)
+    :precondition (and
+      (top ?d ?from)
+      (clear ?d)
+      (not (= ?from ?to))
+      (forall (?d2 - disk)
+        (imply (top ?d2 ?to)
+               (smaller ?d ?d2)))
+    )
+    :effect (and
+      (not (on ?d ?from))
+      (not (top ?d ?from))
+      (on ?d ?to)
+      (top ?d ?to)
+      (forall (?d2 - disk)
+        (when (and (on ?d2 ?from) (smaller ?d2 ?d))
+              (top ?d2 ?from)))
+      (forall (?d2 - disk)
+        (when (top ?d2 ?to)
+              (not (clear ?d2))))
+    )
+  )
+)
+```
+
+```pddl
+(define (problem hanoi-3)
+  (:domain hanoi)
+  
+  (:objects
+    d1 d2 d3 - disk
+    peg-a peg-b peg-c - peg
+  )
+  
+  (:init
+    (smaller d1 d2) (smaller d1 d3) (smaller d2 d3)
+    (on d1 peg-a) (on d2 peg-a) (on d3 peg-a)
+    (top d1 peg-a) (clear d1)
+  )
+  
+  (:goal
+    (and (on d1 peg-c) (on d2 peg-c) (on d3 peg-c))
+  )
+)
+```
+
+## Key PDDL Components
+
+**Domain:** Models the rules and physics of Towers of Hanoi
+- **Types:** `disk` and `peg` objects
+- **Predicates:** Track disk positions, accessibility, and size relationships
+- **Action:** Single `move` action with comprehensive preconditions/effects
+
+**Problem:** Specific puzzle instance (3 disks, A→C)
+- **Objects:** 3 disks (d1=smallest, d3=largest) and 3 pegs
+- **Initial State:** All disks stacked on peg A in correct order
+- **Goal:** All disks moved to peg C
+
+**Key Constraints:**
+- Only topmost clear disks can move
+- Larger disks cannot sit on smaller ones
+- Single action handles all legal moves between pegs
+
+This concise PDDL formulation captures the essential puzzle mechanics while remaining simple enough for classical planners to solve efficiently.

@@ -1,0 +1,138 @@
+# Monkey and Bananas Problem in Situation Calculus
+
+## Initial State Description in Situation Calculus
+
+We'll use a formal language representation like in situation calculus, where we define facts called fluent about the world in the initial situation, typically written as S₀.
+
+### Fluent Definitions
+
+We assume:
+- **At(entity, location, situation)** – entity is at location in a given situation
+- **Height(entity, height_level, situation)** – entity has a height in a given situation  
+- **Has(monkey, object, situation)** – monkey is holding the object in a given situation
+
+### Constants
+
+We'll define the following constants:
+- **Monkey, Box, Bananas** — entities
+- **A, B, C** — locations
+- **Low, High** — height levels
+- **S₀** — initial situation
+
+### Initial State Facts
+
+```
+At(Monkey, A, S₀)
+At(Box, B, S₀)
+At(Bananas, C, S₀)
+Height(Monkey, Low, S₀)
+Height(Box, Low, S₀)
+Height(Bananas, High, S₀)
+¬Has(Monkey, Bananas, S₀)
+```
+
+## Action Schemas
+
+We'll define the 6 actions the monkey can perform. Each action schema includes:
+1. Name
+2. Preconditions (what must be true before the action)
+3. Effects (what becomes true or false after the action)
+
+### 1. Go(x,y)
+Move the monkey from one location to another.
+
+**Go(x, y):**
+- **Precondition:** At(Monkey, x, S)
+- **Effect:**
+  - ¬At(Monkey, x, do(Go(x, y), S))
+  - At(Monkey, y, do(Go(x, y), S))
+
+### 2. Push(Box, x, y)
+Monkey pushes the box from location x to y.
+
+**Push(Box, x, y):**
+- **Precondition:** 
+  - At(Monkey, x, S) ∧ At(Box, x, S) ∧ Height(Monkey, Low, S)
+- **Effect:**
+  - ¬At(Monkey, x, do(Push(Box, x, y), S))
+  - ¬At(Box, x, do(Push(Box, x, y), S))
+  - At(Monkey, y, do(Push(Box, x, y), S))
+  - At(Box, y, do(Push(Box, x, y), S))
+
+### 3. ClimbUp(Box)
+Monkey climbs onto the box at the same location.
+
+**ClimbUp(Box):**
+- **Precondition:**
+  - At(Monkey, L, S) ∧ At(Box, L, S) ∧ Height(Monkey, Low, S)
+- **Effect:**
+  - Height(Monkey, High, do(ClimbUp(Box), S))
+  - ¬Height(Monkey, Low, do(ClimbUp(Box), S))
+
+### 4. ClimbDown(Box)
+Monkey climbs down from the box to the floor.
+
+**ClimbDown(Box):**
+- **Precondition:**
+  - Height(Monkey, High, S)
+- **Effect:**
+  - Height(Monkey, Low, do(ClimbDown(Box), S))
+  - ¬Height(Monkey, High, do(ClimbDown(Box), S))
+
+### 5. Grasp(Object)
+Monkey grabs the bananas if at the same location and height.
+
+**Grasp(Bananas):**
+- **Precondition:**
+  - At(Monkey, L, S) ∧ At(Bananas, L, S) ∧ Height(Monkey, H, S) ∧ Height(Bananas, H, S)
+- **Effect:**
+  - Has(Monkey, Bananas, do(Grasp(Bananas), S))
+
+### 6. Ungrasp(Object)
+Monkey releases the bananas.
+
+**Ungrasp(Bananas):**
+- **Precondition:**
+  - Has(Monkey, Bananas, S)
+- **Effect:**
+  - ¬Has(Monkey, Bananas, do(Ungrasp(Bananas), S))
+  - At(Bananas, L, do(Ungrasp(Bananas), S)) ← At(Monkey, L, S)
+  - Height(Bananas, H, do(Ungrasp(Bananas), S)) ← Height(Monkey, H, S)
+
+## Goal (restated)
+
+The monkey wants to grab the bananas, but also leave the box in its original position (not necessarily B, but wherever it started).
+
+**Goal:** Has(Monkey, Bananas, S) ∧ At(Box, OriginalBoxLocation, S)
+
+## Step by Step Plan
+
+1. Go(A, B)
+2. Push(Box, B, C)
+3. ClimbUp(Box)
+4. Grasp(Bananas)
+5. ClimbDown(Box)
+6. Ungrasp(Bananas)
+7. Push(Box, C, B)
+8. Go(B, C)
+9. Grasp(Bananas)
+
+## Final State S
+
+- Has(Monkey, Bananas, S)
+- At(Box, B, S) (original place)
+- Monkey is at C (doesn't matter)
+- Bananas are with monkey
+
+## Classical Planner Solvability
+
+Yes, this can be solved by a classical planner because:
+
+- The domain has a finite set of deterministic actions
+- Each action has well-defined preconditions and effects
+- There's a clear goal condition
+- The state transitions are fully observable and do not involve uncertainty
+
+The only requirement is that the planner has to reason about sub-goals like:
+- Temporarily ungrasping the bananas
+- Returning the box to its original position before regaining the bananas
